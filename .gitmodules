@@ -1,0 +1,3 @@
+[submodule "pybullet-gym"]
+	path = pybullet-gym
+	url = https://github.com/adqz/pybullet-gym.git

@@ -74,7 +74,7 @@ class DecompCritic(torch.nn.Module):
             sub_critic.init_weights()
             self.sub_critics.append(sub_critic)
 
-        self.fc1 = nn.Linear(len(sub_states), layers[-1][0])
+        self.fc1 = nn.Linear(len(sub_states) + action_size, layers[-1][0])
         self.fc2 = nn.Linear(layers[-1][0], layers[-1][1])
         self.fc3 = nn.Linear(layers[-1][1], 1)
         self.relu = nn.ReLU()
@@ -86,10 +86,7 @@ class DecompCritic(torch.nn.Module):
     def forward(self, state, action):
         sub_q_values = []
         for i, ind in enumerate(self.sub_states):
-            a = [state[j] for j in ind]
-            print(a)
-            sub_states = torch.cat(a)
-            print(sub_states.shape)
+            sub_states = state[:, ind]
             sub_q_values.append(self.sub_critics[i].forward(sub_states, action))
 
         x = torch.cat(sub_q_values + [action], 1)

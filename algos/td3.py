@@ -2,6 +2,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import gym
+import pybulletgym
 
 import copy, time
 from tqdm import trange
@@ -28,7 +29,7 @@ class TD3:
         # environment stuff
         self.env = env
         self.num_act = env.action_space.shape[0]
-        self.num_obs = env.observation_space.shape[0] - 1
+        self.num_obs = env.observation_space.shape[0]
         self.eval_env = copy.deepcopy(env)
 
         # hyper parameters
@@ -206,7 +207,7 @@ class TD3:
 
 if __name__ == "__main__":
     torch.manual_seed(58008)
-    env = gym.make("modified_gym_env:ReacherPyBulletEnv-v1", rand_init=True)
+    env = gym.make("ReacherPyBulletEnv-v0")
     td3 = TD3(env, batch_size=64)
     info = td3.train(10000, 5000)
 

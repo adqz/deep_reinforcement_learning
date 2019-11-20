@@ -20,7 +20,7 @@ parser.add_argument("path",
                     default="no exist")
 args = parser.parse_args()
 
-env = gym.make("modified_gym_env:ReacherPyBulletEnv-v1", rand_init=True)
+env = gym.make("ReacherPyBulletEnv-v0")
 
 pol = Actor(env.observation_space.shape[0] - 1, env.action_space.shape[0], [400, 300]).double()
 path = args.path

@@ -49,7 +49,15 @@ class Critic(torch.nn.Module):
         self.relu = nn.ReLU()
 
     def forward(self, state, action):
+        assert self.state_size in state.shape, 'Invalid dim! No {0} in {1}'.format(self.state_size, state.shape)
+        assert self.action_size in action.shape, 'Invalid dim! No {0} in {1}'.format(self.action_size, action.shape)
+        # debug
+
         x = torch.cat([state, action], 1)
+
+        assert (self.state_size + self.action_size) in x.shape, \
+        'Input size mismatch. Input shape: {0} does not have {1} in it'.format(x.shape, (self.state_size + self.action_size)) 
+
         x = self.relu(self.fc1(x))
         x = self.relu(self.fc2(x))
         x = self.fc3(x)
@@ -74,7 +82,7 @@ class DecompCritic(torch.nn.Module):
             sub_critic.init_weights()
             self.sub_critics.append(sub_critic)
 
-        self.fc1 = nn.Linear(len(sub_states), layers[-1][0])
+        self.fc1 = nn.Linear(len(sub_states)+action_size, layers[-1][0])
         self.fc2 = nn.Linear(layers[-1][0], layers[-1][1])
         self.fc3 = nn.Linear(layers[-1][1], 1)
         self.relu = nn.ReLU()
@@ -86,10 +94,8 @@ class DecompCritic(torch.nn.Module):
     def forward(self, state, action):
         sub_q_values = []
         for i, ind in enumerate(self.sub_states):
-            a = [state[j] for j in ind]
-            print(a)
-            sub_states = torch.cat(a)
-            print(sub_states.shape)
+            sub_states = state[:, ind]
+            # print('sub_states.shape, action.shape = ', sub_states.shape, action.shape) #debug
             sub_q_values.append(self.sub_critics[i].forward(sub_states, action))
 
         x = torch.cat(sub_q_values + [action], 1)

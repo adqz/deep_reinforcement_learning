@@ -2,6 +2,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import gym
+import pybulletgym # register PyBullet enviroments with open ai gym
 
 import copy, time
 from tqdm import trange
@@ -26,7 +27,7 @@ class DDDPG:
         # environment stuff
         self.env = env
         self.num_act = env.action_space.shape[0]
-        self.num_obs = env.observation_space.shape[0] - 1
+        self.num_obs = env.observation_space.shape[0] 
         self.eval_env = copy.deepcopy(env)
         self.sub_states = sub_states
         self.layers = layers
@@ -160,7 +161,7 @@ class DDDPG:
 
 if __name__ == "__main__":
 
-    env = gym.make("modified_gym_env:ReacherPyBulletEnv-v1", rand_init=True)
+    env = gym.make("ReacherPyBulletEnv-v0", sparse_reward = False)
     sub_states = [[0, 1, 2, 3, 4, 5], [0, 1, 2, 3, 6, 7]]
     layers = [[64, 64] for i in range(3)]
 

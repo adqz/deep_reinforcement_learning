@@ -1,6 +1,7 @@
 name: ece276c_project
 channels:
   - pytorch
+  - conda-forge
   - anaconda
   - defaults
 dependencies:
@@ -9,7 +10,7 @@ dependencies:
   - backcall=0.1.0=py37_0
   - blas=1.0=mkl
   - bleach=3.1.0=py37_0
-  - ca-certificates=2019.10.16=0
+  - ca-certificates=2019.9.11=hecc5488_0
   - certifi=2019.9.11=py37_0
   - cffi=1.13.2=py37hb5b8e2f_0
   - dbus=1.13.12=h90a0687_0
@@ -59,7 +60,7 @@ dependencies:
   - numpy=1.17.3=py37h4174a10_0
   - numpy-base=1.17.3=py37h6575580_0
   - olefile=0.46=py37_0
-  - openssl=1.1.1d=h1de35cc_3
+  - openssl=1.1.1d=h0b31af3_0
   - pandoc=2.2.3.2=0
   - pandocfilters=1.4.2=py37_1
   - parso=0.5.1=py_0
@@ -92,6 +93,7 @@ dependencies:
   - tk=8.6.8=ha441bb4_0
   - torchvision=0.4.2=py37_cpu
   - tornado=6.0.3=py37h1de35cc_0
+  - tqdm=4.38.0=py_2
   - traitlets=4.3.3=py37_0
   - wcwidth=0.1.7=py37_0
   - webencodings=0.5.1=py37_1

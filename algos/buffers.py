@@ -2,6 +2,9 @@ import numpy as np
 
 # fifo buffer with random sample implementation
 class ReplayBuffer:
+    '''
+    Container which stores observations from environment and provide ability to sample and insert more examples
+    '''
 
     def __init__(self, buffer_size, initial_size):
         self.buffer_size = buffer_size

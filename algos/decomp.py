@@ -10,6 +10,16 @@ from tqdm import trange
 from models import Actor, DecompCritic
 from buffers import ReplayBuffer
 
+
+def disable_gradient_calculation(model):
+    ''' Sets requried_grad to False so gradients are not computed for the model '''
+    print('Caution: Disbaling gradient')
+    for p in model.parameters():
+        p.requires_grad = False
+
+    return model
+
+
 class TD4:
 
     def __init__(self,
@@ -61,6 +71,11 @@ class TD4:
         self.target_q1 = copy.deepcopy(self.q1).double()
         self.target_q2 = copy.deepcopy(self.q2).double()
 
+        # Remove parameters of target network from computation graph
+        self.target_pol = disable_gradient_calculation(self.target_pol)
+        self.target_q1 = disable_gradient_calculation(self.target_q1)
+        self.target_q2 = disable_gradient_calculation(self.target_q2)
+
         # optimizers, buffer
         self.pol_opt = torch.optim.Adam(self.pol.parameters(),
                                         lr=self.pol_lr)
@@ -68,7 +83,7 @@ class TD4:
                                       lr=self.q_lr,)
         self.q2_opt = torch.optim.Adam(self.q2.parameters(),
                                        lr=self.q_lr, )
-        self.buffer = ReplayBuffer(self.buffer_size, 1000)
+        self.buffer = ReplayBuffer(self.buffer_size, 10000)
         self.mse_loss = torch.nn.MSELoss()
 
         self.cum_q1_loss = 0
@@ -222,7 +237,9 @@ class TD4:
                                                                          avg_q1_loss,
                                                                          avg_q2_loss,
                                                                          avg_obj))
-            self.count_parameters()
+
+            # testing parameters memory
+            # self.count_parameters()
             iter_info.append((iter_reward, avg_q1_loss, avg_q2_loss, avg_obj))
 
         return iter_info
@@ -271,8 +288,8 @@ class DDDPG:
         self.target_q = copy.deepcopy(self.q).double()
 
         # Remove parameters of target network from computation graph
-        self.target_pol = self.disable_gradient_calculation(self.target_pol)
-        self.target_q = self.disable_gradient_calculation(self.target_q)
+        self.target_pol = disable_gradient_calculation(self.target_pol)
+        self.target_q = disable_gradient_calculation(self.target_q)
 
         # optimizers, buffer
         self.pol_opt = torch.optim.Adam(self.pol.parameters(),
@@ -295,14 +312,6 @@ class DDDPG:
             self.buffer.insert((pre_obs, action, reward, obs, done))
             if done: obs = self.env.reset()
 
-
-    def disable_gradient_calculation(self, model):
-        ''' Sets requried_grad to False so gradients are not computed for the model '''
-        print('Caution: Disbaling gradient')
-        for p in model.parameters():
-            p.requires_grad = False
-
-        return model
 
     # update neural net
     def update_networks(self):
@@ -337,13 +346,6 @@ class DDDPG:
         for target, actual in zip(self.target_pol.named_parameters(), self.pol.named_parameters()):
             target[1].data.copy_(self.tau * actual[1].data + (1 - self.tau) * target[1].data)
 
-        # # Adnan's approach
-        # for target, actual in zip(self.target_q.parameters(), self.q.parameters()):
-        #     with torch.no_grad():
-        #         target = self.tau * actual + ((1 - self.tau) * target)
-        # for target, actual in zip(self.target_pol.parameters(), self.pol.parameters()):
-        #     with torch.no_grad():
-        #         target = self.tau * actual + ((1 - self.tau) * target)
 
     def policy_eval(self):
         state = self.eval_env.reset()
@@ -425,8 +427,10 @@ class DDDPG:
             print("Rewards: {} | Q Loss: {} | Policy Objective: {}".format(iter_reward,
                                                                          avg_loss,
                                                                          avg_obj))
-            self.count_all_parameters()
-            self.count_trainable_parameters()
+
+            # testing parameters
+            # self.count_all_parameters()
+            # self.count_trainable_parameters()
             iter_info.append((iter_reward, avg_loss, avg_obj))
 
         return iter_info
@@ -439,7 +443,7 @@ if __name__ == "__main__":
     sub_states = [[0, 1, 2, 3, 4, 5, 6], [0, 1, 2, 3, 7, 8]]
     layers = [[128, 128] for i in range(3)]
 
-    td4 = DDDPG(env, sub_states, layers, buffer_size=1e6)
+    td4 = TD4(env, sub_states, layers, buffer_size=1e6)
 
     res = td4.train(2000000, 1000)
     import pickle

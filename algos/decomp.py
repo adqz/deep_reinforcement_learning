@@ -165,6 +165,22 @@ class TD4:
         total = sum(rewards)
         return total
 
+    def count_parameters(self):
+        ''' Count number of parameters in network and print them '''
+        params_pol = sum(p.numel() for p in self.pol.parameters() if p.requires_grad)
+        params_q1 = sum(p.numel() for p in self.q1.parameters() if p.requires_grad)
+        params_q2 = sum(p.numel() for p in self.q2.parameters() if p.requires_grad)
+        params_target_pol = sum(p.numel() for p in self.target_pol.parameters() if p.requires_grad)
+        params_target_q1 = sum(p.numel() for p in self.target_q1.parameters() if p.requires_grad)
+        params_target_q2 = sum(p.numel() for p in self.target_q2.parameters() if p.requires_grad)
+
+        params_1 = (params_pol + params_q1 + params_q2)
+        params_2 = (params_target_pol + params_target_q1 + params_target_q2)
+        total_trainable_params = params_1 + params_2
+
+        print(f'Parameter count: {params_1} + {params_2} = {total_trainable_params}')
+        return
+
     def train(self, num_iters=200000, eval_len=1000, render=False):
         print("Start")
         if render: self.env.render('human')
@@ -205,6 +221,7 @@ class TD4:
                                                                          avg_q1_loss,
                                                                          avg_q2_loss,
                                                                          avg_obj))
+            self.count_parameters()
             iter_info.append((iter_reward, avg_q1_loss, avg_q2_loss, avg_obj))
 
         return iter_info
@@ -246,8 +263,13 @@ class DDDPG:
         self.q = DecompCritic(self.sub_states, self.num_act, layers).double()
         self.pol.init_weights()
         self.q.init_weights()
+        
         self.target_pol = copy.deepcopy(self.pol).double()
         self.target_q = copy.deepcopy(self.q).double()
+
+        # Remove parameters of target network from computation graph
+        self.target_pol = self.disable_gradient_calculation(self.target_pol)
+        self.target_q = self.disable_gradient_calculation(self.target_q)
 
         # optimizers, buffer
         self.pol_opt = torch.optim.Adam(self.pol.parameters(),
@@ -271,6 +293,14 @@ class DDDPG:
             if done: obs = self.env.reset()
 
 
+    def disable_gradient_calculation(self, model):
+        ''' Sets requried_grad to False so gradients are not computed for the model '''
+        print('Caution: Disbaling gradient')
+        for p in model.parameters():
+            p.requires_grad = False
+
+        return model
+
     # update neural net
     def update_networks(self):
         # (pre_obs, action, reward, obs, done)
@@ -281,7 +311,9 @@ class DDDPG:
         done = torch.tensor(self.batch[4], dtype=torch.double).unsqueeze(1)
 
         self.q_opt.zero_grad()
-        y = rewards + (self.gamma * (1.0 - done) * self.target_q(obs, self.target_pol(obs)))
+        a_target = self.target_pol(obs).detach()
+        q_target = self.target_q(obs, a_target).detach()
+        y = rewards + (self.gamma * (1.0 - done) * q_target)
         # loss = torch.sum((y - self.q(pre_obs, actions)) ** 2) / self.batch_size
         loss = self.mse_loss(self.q(pre_obs, actions), y)
         loss.backward()
@@ -302,6 +334,14 @@ class DDDPG:
         for target, actual in zip(self.target_pol.named_parameters(), self.pol.named_parameters()):
             target[1].data.copy_(self.tau * actual[1].data + (1 - self.tau) * target[1].data)
 
+        # # Adnan's approach
+        # for target, actual in zip(self.target_q.parameters(), self.q.parameters()):
+        #     with torch.no_grad():
+        #         target = self.tau * actual + ((1 - self.tau) * target)
+        # for target, actual in zip(self.target_pol.parameters(), self.pol.parameters()):
+        #     with torch.no_grad():
+        #         target = self.tau * actual + ((1 - self.tau) * target)
+
     def policy_eval(self):
         state = self.eval_env.reset()
         done = False
@@ -318,6 +358,34 @@ class DDDPG:
 
         total = sum(rewards)
         return total
+
+    def count_trainable_parameters(self):
+        ''' Count number of trainable parameters in network and print them '''
+        params_pol = sum(p.numel() for p in self.pol.parameters() if p.requires_grad)
+        params_q = sum(p.numel() for p in self.q.parameters() if p.requires_grad)
+        params_target_pol = sum(p.numel() for p in self.target_pol.parameters() if p.requires_grad)
+        params_target_q = sum(p.numel() for p in self.target_q.parameters() if p.requires_grad)
+
+        params_1 = (params_pol + params_q)
+        params_2 = (params_target_pol + params_target_q)
+        total_trainable_params = params_1 + params_2
+
+        print(f'Trainable parameter count: {params_1} + {params_2} = {total_trainable_params}')
+        return
+
+    def count_all_parameters(self):
+        ''' Count all parameters in network and print them '''
+        params_pol = sum(p.numel() for p in self.pol.parameters())
+        params_q = sum(p.numel() for p in self.q.parameters())
+        params_target_pol = sum(p.numel() for p in self.target_pol.parameters())
+        params_target_q = sum(p.numel() for p in self.target_q.parameters())
+
+        params_1 = (params_pol + params_q)
+        params_2 = (params_target_pol + params_target_q)
+        total_trainable_params = params_1 + params_2
+
+        print(f'All parameter count: {params_1} + {params_2} = {total_trainable_params}')
+        return
 
     def train(self, num_iters=200000, eval_len=1000, render=False):
         print("Start")
@@ -354,6 +422,8 @@ class DDDPG:
             print("Rewards: {} | Q Loss: {} | Policy Objective: {}".format(iter_reward,
                                                                          avg_loss,
                                                                          avg_obj))
+            self.count_all_parameters()
+            self.count_trainable_parameters()
             iter_info.append((iter_reward, avg_loss, avg_obj))
 
         return iter_info

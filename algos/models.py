@@ -102,3 +102,4 @@ class DecompCritic(torch.nn.Module):
         nn.init.uniform_(self.fc1.bias.data, -1 / (np.sqrt(len(self.sub_states) + self.action_size)), 1 / (np.sqrt(len(self.sub_states)+ self.action_size)))
         nn.init.uniform_(self.fc2.bias.data, -1 / (np.sqrt(self.layers[-1][0])), 1 / (np.sqrt(self.layers[-1][0])))
         nn.init.uniform_(self.fc3.bias.data, -3e-3, 3e-3)
+

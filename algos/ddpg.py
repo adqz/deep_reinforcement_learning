@@ -81,13 +81,13 @@ class DDPG:
         loss = self.mse_loss(self.q(pre_obs, actions), y)
         loss.backward()
         self.q_opt.step()
-        self.cum_loss += loss
+        self.cum_loss += loss.item()
 
         self.pol_opt.zero_grad()
         objective = -self.q(pre_obs, self.pol(pre_obs)).mean()
         objective.backward()
         self.pol_opt.step()
-        self.cum_obj += objective
+        self.cum_obj += objective.item()
 
 
     # update target networks with tau
@@ -156,6 +156,13 @@ class DDPG:
 
 if __name__ == "__main__":
     torch.manual_seed(58008)
-    env = gym.make("ReacherPyBulletEnv-v0")
+    env = gym.make("ReacherPyBulletEnv-v0", sparse_reward=True, rand_init=False)
     ddpg = DDPG(env, batch_size=500)
-    info = ddpg.train(200000, 1000)
+    res = ddpg.train(200000, 1000)
+    model = ddpg.pol.state_dict()
+    import pickle
+    import time
+    pickle.dump(res, open('./data/info_{}'.format(time.time()), 'wb'))
+    path = './data/policy_{}'.format(time.time())
+    torch.save(model, path)
+

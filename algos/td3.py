@@ -124,14 +124,14 @@ class TD3:
         q2_loss.backward()
         self.q1_opt.step()
         self.q2_opt.step()
-        self.cum_q1_loss += q1_loss
-        self.cum_q2_loss += q2_loss
+        self.cum_q1_loss += q1_loss.item()
+        self.cum_q2_loss += q2_loss.item()
 
         self.pol_opt.zero_grad()
         objective = -self.q1(pre_obs, self.pol(pre_obs)).mean()
         objective.backward()
         self.pol_opt.step()
-        self.cum_obj += objective
+        self.cum_obj += objective.item()
 
 
     # update target networks with tau

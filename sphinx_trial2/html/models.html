@@ -1,0 +1,181 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>models module &#8212; doc_1 1.0 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="reacher_render module" href="reacher_render.html" />
+    <link rel="prev" title="decomp module" href="decomp.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="reacher_render.html" title="reacher_render module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="decomp.html" title="decomp module"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">doc_1 1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-models">
+<span id="models-module"></span><h1>models module<a class="headerlink" href="#module-models" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="models.Actor">
+<em class="property">class </em><code class="sig-prename descclassname">models.</code><code class="sig-name descname">Actor</code><span class="sig-paren">(</span><em class="sig-param">state_size</em>, <em class="sig-param">action_size</em>, <em class="sig-param">layers</em><span class="sig-paren">)</span><a class="headerlink" href="#models.Actor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
+<dl class="method">
+<dt id="models.Actor.forward">
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#models.Actor.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="models.Actor.init_weights">
+<code class="sig-name descname">init_weights</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#models.Actor.init_weights" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="models.Critic">
+<em class="property">class </em><code class="sig-prename descclassname">models.</code><code class="sig-name descname">Critic</code><span class="sig-paren">(</span><em class="sig-param">state_size</em>, <em class="sig-param">action_size</em>, <em class="sig-param">layers</em><span class="sig-paren">)</span><a class="headerlink" href="#models.Critic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
+<dl class="method">
+<dt id="models.Critic.forward">
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">action</em><span class="sig-paren">)</span><a class="headerlink" href="#models.Critic.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="models.Critic.init_weights">
+<code class="sig-name descname">init_weights</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#models.Critic.init_weights" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="models.DecompCritic">
+<em class="property">class </em><code class="sig-prename descclassname">models.</code><code class="sig-name descname">DecompCritic</code><span class="sig-paren">(</span><em class="sig-param">sub_states</em>, <em class="sig-param">action_size</em>, <em class="sig-param">layers</em><span class="sig-paren">)</span><a class="headerlink" href="#models.DecompCritic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
+<dl class="method">
+<dt id="models.DecompCritic.forward">
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">action</em><span class="sig-paren">)</span><a class="headerlink" href="#models.DecompCritic.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="models.DecompCritic.init_weights">
+<code class="sig-name descname">init_weights</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#models.DecompCritic.init_weights" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="decomp.html"
+                        title="previous chapter">decomp module</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="reacher_render.html"
+                        title="next chapter">reacher_render module</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/models.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="reacher_render.html" title="reacher_render module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="decomp.html" title="decomp module"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">doc_1 1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Adnan and Duke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.1.
+    </div>
+  </body>
+</html>

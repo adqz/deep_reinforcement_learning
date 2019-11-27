@@ -1,0 +1,266 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>td3 module &mdash; Value function Decomposition for single agent inspired from MARL 1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Value function Decomposition for single agent inspired from MARL 1 documentation" href="index.html"/>
+        <link rel="prev" title="reacher_render module" href="reacher_render.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Value function Decomposition for single agent inspired from MARL
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="buffers.html">buffers module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ddpg.html">ddpg module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="decomp.html">decomp module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">models module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reacher_render.html">reacher_render module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">td3 module</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Value function Decomposition for single agent inspired from MARL</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>td3 module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/td3.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-td3">
+<span id="td3-module"></span><h1>td3 module<a class="headerlink" href="#module-td3" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="td3.TD3">
+<em class="property">class </em><code class="sig-prename descclassname">td3.</code><code class="sig-name descname">TD3</code><span class="sig-paren">(</span><em class="sig-param">env</em>, <em class="sig-param">gamma=0.99</em>, <em class="sig-param">tau=0.001</em>, <em class="sig-param">pol_lr=0.0001</em>, <em class="sig-param">q_lr=0.005</em>, <em class="sig-param">batch_size=64</em>, <em class="sig-param">buffer_size=10000</em>, <em class="sig-param">target_noise=0.2</em>, <em class="sig-param">action_noise=0.1</em>, <em class="sig-param">clip_range=0.5</em>, <em class="sig-param">update_delay=2</em><span class="sig-paren">)</span><a class="headerlink" href="#td3.TD3" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="td3.TD3.clip">
+<code class="sig-name descname">clip</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">l</em>, <em class="sig-param">u</em><span class="sig-paren">)</span><a class="headerlink" href="#td3.TD3.clip" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="td3.TD3.noise">
+<code class="sig-name descname">noise</code><span class="sig-paren">(</span><em class="sig-param">noise</em>, <em class="sig-param">length</em><span class="sig-paren">)</span><a class="headerlink" href="#td3.TD3.noise" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="td3.TD3.policy_eval">
+<code class="sig-name descname">policy_eval</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#td3.TD3.policy_eval" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="td3.TD3.prep_buffer">
+<code class="sig-name descname">prep_buffer</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#td3.TD3.prep_buffer" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="td3.TD3.train">
+<code class="sig-name descname">train</code><span class="sig-paren">(</span><em class="sig-param">num_iters=200000</em>, <em class="sig-param">eval_len=1000</em>, <em class="sig-param">render=False</em><span class="sig-paren">)</span><a class="headerlink" href="#td3.TD3.train" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="td3.TD3.update_networks">
+<code class="sig-name descname">update_networks</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#td3.TD3.update_networks" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="td3.TD3.update_target_networks">
+<code class="sig-name descname">update_target_networks</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#td3.TD3.update_target_networks" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="reacher_render.html" class="btn btn-neutral" title="reacher_render module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Adnan and Duke.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> and ❤️  using a custom <a href="https://github.com/LinxiFan/Sphinx-theme">theme</a> based on <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="_static/language_data.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

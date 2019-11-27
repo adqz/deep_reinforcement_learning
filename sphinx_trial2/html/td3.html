@@ -1,0 +1,137 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>td3 module &#8212; doc_1 1.0 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="reacher_render module" href="reacher_render.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="reacher_render.html" title="reacher_render module"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">doc_1 1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-td3">
+<span id="td3-module"></span><h1>td3 module<a class="headerlink" href="#module-td3" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="td3.TD3">
+<em class="property">class </em><code class="sig-prename descclassname">td3.</code><code class="sig-name descname">TD3</code><span class="sig-paren">(</span><em class="sig-param">env</em>, <em class="sig-param">gamma=0.99</em>, <em class="sig-param">tau=0.001</em>, <em class="sig-param">pol_lr=0.0001</em>, <em class="sig-param">q_lr=0.005</em>, <em class="sig-param">batch_size=64</em>, <em class="sig-param">buffer_size=10000</em>, <em class="sig-param">target_noise=0.2</em>, <em class="sig-param">action_noise=0.1</em>, <em class="sig-param">clip_range=0.5</em>, <em class="sig-param">update_delay=2</em><span class="sig-paren">)</span><a class="headerlink" href="#td3.TD3" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="td3.TD3.clip">
+<code class="sig-name descname">clip</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">l</em>, <em class="sig-param">u</em><span class="sig-paren">)</span><a class="headerlink" href="#td3.TD3.clip" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="td3.TD3.noise">
+<code class="sig-name descname">noise</code><span class="sig-paren">(</span><em class="sig-param">noise</em>, <em class="sig-param">length</em><span class="sig-paren">)</span><a class="headerlink" href="#td3.TD3.noise" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="td3.TD3.policy_eval">
+<code class="sig-name descname">policy_eval</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#td3.TD3.policy_eval" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="td3.TD3.prep_buffer">
+<code class="sig-name descname">prep_buffer</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#td3.TD3.prep_buffer" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="td3.TD3.train">
+<code class="sig-name descname">train</code><span class="sig-paren">(</span><em class="sig-param">num_iters=200000</em>, <em class="sig-param">eval_len=1000</em>, <em class="sig-param">render=False</em><span class="sig-paren">)</span><a class="headerlink" href="#td3.TD3.train" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="td3.TD3.update_networks">
+<code class="sig-name descname">update_networks</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#td3.TD3.update_networks" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="td3.TD3.update_target_networks">
+<code class="sig-name descname">update_target_networks</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#td3.TD3.update_target_networks" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="reacher_render.html"
+                        title="previous chapter">reacher_render module</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/td3.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="reacher_render.html" title="reacher_render module"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">doc_1 1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Adnan and Duke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.1.
+    </div>
+  </body>
+</html>

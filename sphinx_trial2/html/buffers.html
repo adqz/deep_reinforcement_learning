@@ -1,0 +1,154 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>buffers module &#8212; doc_1 1.0 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="ddpg module" href="ddpg.html" />
+    <link rel="prev" title="algos" href="index.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="ddpg.html" title="ddpg module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="algos"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">doc_1 1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-buffers">
+<span id="buffers-module"></span><h1>buffers module<a class="headerlink" href="#module-buffers" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="buffers.ReplayBuffer">
+<em class="property">class </em><code class="sig-prename descclassname">buffers.</code><code class="sig-name descname">ReplayBuffer</code><span class="sig-paren">(</span><em class="sig-param">buffer_size</em>, <em class="sig-param">initial_size</em><span class="sig-paren">)</span><a class="headerlink" href="#buffers.ReplayBuffer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Container which stores experiences and provides ability to 
+1. Sample examples
+2. Insert example</p>
+<p>An example is a five element tuple as follows: (pre_obs, action, reward, obs, done)</p>
+<p>The attribute “buffer” must be used to access contents of the buffer. It is of type list.</p>
+<p>The buffer loosely follows the queue data structure.
+If the buffer gets full and a new sample needs to be inserted, 
+the entry at index 0 gets removed (least recent) to accomodate the new entry.</p>
+<p>Dependencies - numpy
+For more details on buffer refer - <a class="reference external" href="https://tinyurl.com/t2ur26m">https://tinyurl.com/t2ur26m</a></p>
+<dl class="method">
+<dt id="buffers.ReplayBuffer.insert">
+<code class="sig-name descname">insert</code><span class="sig-paren">(</span><em class="sig-param">example</em><span class="sig-paren">)</span><a class="headerlink" href="#buffers.ReplayBuffer.insert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Insert a single example in to the buffer. If buffer is full, remove the example at index 0
+to accomodate the new example.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>example</strong> (<em>tuple</em>) – New example to add to buffer. Format should be in the following order: (pre_obs, action, reward, obs, done)</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>AssertionError</strong> – If input is not tuple and is not of length five</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="buffers.ReplayBuffer.sample">
+<code class="sig-name descname">sample</code><span class="sig-paren">(</span><em class="sig-param">batch_size</em><span class="sig-paren">)</span><a class="headerlink" href="#buffers.ReplayBuffer.sample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a batch of size batch_size from the buffer.
+:param batch_size: Number of examples to sample from buffer
+:type batch_size: int
+:return: Tuple containing five numpy arrays, each of size (batch_size,) in the order - (pre_obs, action, reward, obs, done)
+:rtype: tuple
+:raises AssertionError: If batch_size is not in range [initial_size, buffer_size]</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">algos</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="ddpg.html"
+                        title="next chapter">ddpg module</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/buffers.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="ddpg.html" title="ddpg module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="algos"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">doc_1 1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Adnan and Duke.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.1.
+    </div>
+  </body>
+</html>

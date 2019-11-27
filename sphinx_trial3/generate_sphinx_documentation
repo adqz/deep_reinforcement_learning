@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+# Place this file in the root folder of the sphinx documentation generator
+
+# mkdir sphinx_trial3
+# cd sphinx_trial3/
+# mkdir rst html
+
+# sphinx-quickstart
+
+# make html
+
+## The "make html" command will generate a conf.py file. Make sure the path points to the scripts.
+## If done properly, then only the following files will run properly
+
+## Generate .rst files which contain all info for html pages
+sphinx-apidoc -o ./rst ../algos
+cd rst
+cp modules.rst index.rst
+mkdir _static
+cp ../conf.py .
+## Use .rst files to render static html files
+cd ..
+sphinx-build -b html ./rst/ ./html/

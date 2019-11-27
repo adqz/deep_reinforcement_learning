@@ -43,6 +43,7 @@ class TD4:
         self.num_act = env.action_space.shape[0]
         self.num_obs = env.observation_space.shape[0]
         self.eval_env = copy.deepcopy(env)
+        self.eval_env.rand_init = False
         self.sub_states = sub_states
         self.layers = layers
 
@@ -264,6 +265,7 @@ class DDDPG:
         self.num_act = env.action_space.shape[0]
         self.num_obs = env.observation_space.shape[0]
         self.eval_env = copy.deepcopy(env)
+        self.eval_env.rand_init = False
         self.sub_states = sub_states
         self.layers = layers
 

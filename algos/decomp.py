@@ -9,7 +9,7 @@ from tqdm import trange
 
 from models import Actor, DecompCritic
 from buffers import ReplayBuffer
-
+print('torch.cuda.is_available() = ', torch.cuda.is_available())
 
 def disable_gradient_calculation(model):
     ''' Sets requried_grad to False so gradients are not computed for the model '''
@@ -59,10 +59,10 @@ class TD4:
         self.clip_range = clip_range
         self.update_delay = update_delay
 
-        # networks
-        self.pol = Actor(self.num_obs, self.num_act, [400, 300]).double()
-        self.q1 = DecompCritic(self.sub_states, self.num_act, layers).double()
-        self.q2 = DecompCritic(self.sub_states, self.num_act, layers).double()
+        # initialize networks and push them to gpu if available
+        self.pol = Actor(self.num_obs, self.num_act, [400, 300]).double().to(device)
+        self.q1 = DecompCritic(self.sub_states, self.num_act, layers).double().to(device)
+        self.q2 = DecompCritic(self.sub_states, self.num_act, layers).double().to(device)
         self.pol.init_weights()
         self.q1.init_weights()
         self.q2.init_weights()
@@ -85,7 +85,7 @@ class TD4:
         self.q2_opt = torch.optim.Adam(self.q2.parameters(),
                                        lr=self.q_lr, )
         self.buffer = ReplayBuffer(self.buffer_size, 10000)
-        self.mse_loss = torch.nn.MSELoss()
+        self.mse_loss = torch.nn.MSELoss().to(device)
 
         self.cum_q1_loss = 0
         self.cum_q2_loss = 0
@@ -121,7 +121,7 @@ class TD4:
 
     # update neural net
     def update_networks(self):
-        # (pre_obs, action, reward, obs, done)
+        # batch = (pre_obs, action, reward, obs, done)
         pre_obs = torch.tensor(self.batch[0], dtype=torch.double)
         actions = torch.tensor(self.batch[1], dtype=torch.double)
         rewards = torch.tensor(self.batch[2], dtype=torch.double)
@@ -210,7 +210,7 @@ class TD4:
             for j in trange(eval_len):
                 # one step and put into buffer
                 pre_obs = obs
-                inp = torch.tensor(obs, dtype=torch.double)
+                inp = torch.tensor(obs, dtype=torch.double).to(device)
                 action = self.pol(inp)
                 action = action + self.noise(self.action_noise, self.num_act)
                 action = action.detach().numpy()
@@ -439,6 +439,9 @@ class DDDPG:
 
 
 if __name__ == "__main__":
+    # Deciding to use GPU  if available
+    global device
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     seed = 1995
     torch.manual_seed(seed)
     env = gym.make("ReacherPyBulletEnv-v0", sparse_reward=True, rand_init=False)

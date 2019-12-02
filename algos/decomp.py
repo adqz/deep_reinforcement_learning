@@ -183,7 +183,7 @@ class TD4:
             # self.eval_env.render()
             # time.sleep(0.1)
             state = next_state
-            print(r)
+            # print(r)
 
         total = sum(rewards)
         return total
@@ -458,13 +458,13 @@ if __name__ == "__main__":
     seed = 1995
     torch.manual_seed(seed)
     env = gym.make("ReacherPyBulletEnv-v0", sparse_reward=False, rand_init=False)
-    sub_states = [[0, 1, 2, 3, 4, 5], [0, 1, 2, 3, 6, 7]]
+    sub_states = [[0, 1, 2, 3, 4, 5], [0, 1, 2, 3, 4, 5, 6, 7]]
     layers = [[128, 128] for i in range(3)]
 
     time_pref = time.strftime("_%Y_%m_%d_%H_%M")
     title = "td4_dense" + time_pref
-    td4 = TD4(env, sub_states, layers, buffer_size=1e6, save_location=title)
+    td4 = TD4(env, sub_states, layers, buffer_size=1e4, save_location=title)
 
-    res = td4.train(200, 100)
+    res = td4.train(200000, 2000)
 
 

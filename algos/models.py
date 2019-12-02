@@ -70,11 +70,11 @@ class DecompCritic(torch.nn.Module):
         super(DecompCritic, self).__init__()
         self.sub_critics = []
         for i, inds in enumerate(sub_states):
-            sub_critic = Critic(len(inds), action_size, layers[i]).double()
+            sub_critic = Critic(len(inds), 1, layers[i]).double()
             sub_critic.init_weights()
             self.sub_critics.append(sub_critic)
 
-        self.fc1 = nn.Linear(len(sub_states) + action_size, layers[-1][0])
+        self.fc1 = nn.Linear(len(sub_states), layers[-1][0])
         self.fc2 = nn.Linear(layers[-1][0], layers[-1][1])
         self.fc3 = nn.Linear(layers[-1][1], 1)
         self.relu = nn.ReLU()
@@ -87,19 +87,19 @@ class DecompCritic(torch.nn.Module):
         sub_q_values = []
         for i, ind in enumerate(self.sub_states):
             sub_states = state[:, ind]
-            sub_q_values.append(self.sub_critics[i].forward(sub_states, action))
+            sub_q_values.append(self.sub_critics[i].forward(sub_states, action[:, i].unsqueeze(1)))
 
-        x = torch.cat(sub_q_values + [action], 1)
+        x = torch.cat(sub_q_values, 1)
         x = self.relu(self.fc1(x))
         x = self.relu(self.fc2(x))
         x = self.fc3(x)
         return x
 
     def init_weights(self):
-        nn.init.uniform_(self.fc1.weight.data, -1 / (np.sqrt(len(self.sub_states) + self.action_size)), 1 / (np.sqrt(len(self.sub_states)+ self.action_size)))
+        nn.init.uniform_(self.fc1.weight.data, -1 / (np.sqrt(len(self.sub_states))), 1 / (np.sqrt(len(self.sub_states)+ self.action_size)))
         nn.init.uniform_(self.fc2.weight.data, -1 / (np.sqrt(self.layers[-1][0])), 1 / (np.sqrt(self.layers[-1][0])))
         nn.init.uniform_(self.fc3.weight.data, -3e-3, 3e-3)
-        nn.init.uniform_(self.fc1.bias.data, -1 / (np.sqrt(len(self.sub_states) + self.action_size)), 1 / (np.sqrt(len(self.sub_states)+ self.action_size)))
+        nn.init.uniform_(self.fc1.bias.data, -1 / (np.sqrt(len(self.sub_states))), 1 / (np.sqrt(len(self.sub_states)+ self.action_size)))
         nn.init.uniform_(self.fc2.bias.data, -1 / (np.sqrt(self.layers[-1][0])), 1 / (np.sqrt(self.layers[-1][0])))
         nn.init.uniform_(self.fc3.bias.data, -3e-3, 3e-3)
 

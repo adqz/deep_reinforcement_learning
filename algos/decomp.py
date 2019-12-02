@@ -10,6 +10,9 @@ from tqdm import trange
 from models import Actor, DecompCritic
 from buffers import ReplayBuffer
 
+import pickle
+import time
+import os
 
 def disable_gradient_calculation(model):
     ''' Sets requried_grad to False so gradients are not computed for the model '''
@@ -26,6 +29,7 @@ class TD4:
                  env,
                  sub_states,
                  layers,
+                 save_location,
                  gamma = 0.99,
                  tau = 1e-3,
                  pol_lr = 1e-4,
@@ -43,8 +47,10 @@ class TD4:
         self.num_act = env.action_space.shape[0]
         self.num_obs = env.observation_space.shape[0]
         self.eval_env = copy.deepcopy(env)
+        self.eval_env.rand_init = False
         self.sub_states = sub_states
         self.layers = layers
+        self.save_location = save_location
 
         # hyper parameters
         self.gamma = gamma
@@ -177,6 +183,7 @@ class TD4:
             # self.eval_env.render()
             # time.sleep(0.1)
             state = next_state
+            print(r)
 
         total = sum(rewards)
         return total
@@ -237,7 +244,7 @@ class TD4:
                                                                          avg_q1_loss,
                                                                          avg_q2_loss,
                                                                          avg_obj))
-
+            save_model(iter_info, self.save_location, i)
             # testing parameters memory
             # self.count_parameters()
             iter_info.append((iter_reward, avg_q1_loss, avg_q2_loss, avg_obj))
@@ -264,6 +271,7 @@ class DDDPG:
         self.num_act = env.action_space.shape[0]
         self.num_obs = env.observation_space.shape[0]
         self.eval_env = copy.deepcopy(env)
+        self.eval_env.rand_init = False
         self.sub_states = sub_states
         self.layers = layers
 
@@ -436,19 +444,27 @@ class DDDPG:
         return iter_info
 
 
+def save_model(res, title, iter):
+    if not os.path.exists("./data/info/"):
+        os.makedirs("./data/info/")
+    if not os.path.exists("./data/policy/"):
+        os.makedirs("./data/policy/")
+    pickle.dump(res, open('./data/info/info_{}_{}'.format(title, iter), 'wb'))
+    path = './data/policy/policy_{}_{}'.format(title, iter)
+    torch.save(td4.pol.state_dict(), path)
+
+
 if __name__ == "__main__":
     seed = 1995
     torch.manual_seed(seed)
-    env = gym.make("ReacherPyBulletEnv-v0", sparse_reward=True, rand_init=False)
-    sub_states = [[0, 1, 2, 3, 4, 5, 6], [0, 1, 2, 3, 7, 8]]
+    env = gym.make("ReacherPyBulletEnv-v0", sparse_reward=False, rand_init=False)
+    sub_states = [[0, 1, 2, 3, 4, 5], [0, 1, 2, 3, 6, 7]]
     layers = [[128, 128] for i in range(3)]
 
-    td4 = TD4(env, sub_states, layers, buffer_size=1e6)
+    time_pref = time.strftime("_%Y_%m_%d_%H_%M")
+    title = "td4_dense" + time_pref
+    td4 = TD4(env, sub_states, layers, buffer_size=1e6, save_location=title)
 
-    res = td4.train(2000000, 1000)
-    import pickle
-    import time
+    res = td4.train(200, 100)
 
-    pickle.dump(res, open('./data/info_{}'.format(time.time()), 'wb'))
-    path = './data/policy_{}'.format(time.time())
-    torch.save(td4.pol.state_dict(), path)
+

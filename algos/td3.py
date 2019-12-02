@@ -31,6 +31,7 @@ class TD3:
         self.num_act = env.action_space.shape[0]
         self.num_obs = env.observation_space.shape[0]
         self.eval_env = copy.deepcopy(env)
+        self.eval_env.rand_init = False
 
         # hyper parameters
         self.gamma = gamma

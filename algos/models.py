@@ -96,10 +96,36 @@ class DecompCritic(torch.nn.Module):
         return x
 
     def init_weights(self):
-        nn.init.uniform_(self.fc1.weight.data, -1 / (np.sqrt(len(self.sub_states))), 1 / (np.sqrt(len(self.sub_states)+ self.action_size)))
+        nn.init.uniform_(self.fc1.weight.data, -1 / (np.sqrt(len(self.sub_states))), 1 / (np.sqrt(len(self.sub_states))))
         nn.init.uniform_(self.fc2.weight.data, -1 / (np.sqrt(self.layers[-1][0])), 1 / (np.sqrt(self.layers[-1][0])))
         nn.init.uniform_(self.fc3.weight.data, -3e-3, 3e-3)
-        nn.init.uniform_(self.fc1.bias.data, -1 / (np.sqrt(len(self.sub_states))), 1 / (np.sqrt(len(self.sub_states)+ self.action_size)))
+        nn.init.uniform_(self.fc1.bias.data, -1 / (np.sqrt(len(self.sub_states))), 1 / (np.sqrt(len(self.sub_states))))
         nn.init.uniform_(self.fc2.bias.data, -1 / (np.sqrt(self.layers[-1][0])), 1 / (np.sqrt(self.layers[-1][0])))
         nn.init.uniform_(self.fc3.bias.data, -3e-3, 3e-3)
 
+class CompCritic(torch.nn.Module):
+
+    def __init__(self, state_size, layers):
+        super(CompCritic, self).__init__()
+        self.state_size = state_size
+        self.layers = layers
+
+        self.fc1 = nn.Linear(state_size, layers[0])
+        # self.bn1 = nn.BatchNorm1d(num_features=layers[0])
+        self.fc2 = nn.Linear(layers[0] , layers[1])
+        self.fc3 = nn.Linear(layers[1], 1)
+        self.relu = nn.ReLU()
+
+    def forward(self, q):
+        x = self.relu(self.fc1(q))
+        x = self.relu(self.fc2(x))
+        x = self.fc3(x)
+        return x
+
+    def init_weights(self):
+        nn.init.uniform_(self.fc1.weight.data, -1 / (np.sqrt(self.state_size)), 1 / (np.sqrt(self.state_size)))
+        nn.init.uniform_(self.fc2.weight.data, -1 / (np.sqrt(self.layers[0])), 1 / (np.sqrt(self.layers[0])))
+        nn.init.uniform_(self.fc3.weight.data, -3e-3, 3e-3)
+        nn.init.uniform_(self.fc1.bias.data, -1 / (np.sqrt(self.state_size)), 1 / (np.sqrt(self.state_size)))
+        nn.init.uniform_(self.fc2.bias.data, -1 / (np.sqrt(self.layers[0])), 1 / (np.sqrt(self.layers[0])))
+        nn.init.uniform_(self.fc3.bias.data, -3e-3, 3e-3)

@@ -7,7 +7,7 @@ import pybulletgym
 import copy, time
 from tqdm import trange
 
-from models import Actor, DecompCritic, Critic
+from models import Actor, CompCritic, Critic
 from buffers import ReplayBuffer
 
 import pickle
@@ -16,7 +16,7 @@ import os
 
 def disable_gradient_calculation(model):
     ''' Sets requried_grad to False so gradients are not computed for the model '''
-    print('Caution: Disbaling gradient')
+    # print('Caution: Disabling gradient')
     for p in model.parameters():
         p.requires_grad = False
 
@@ -33,11 +33,12 @@ def save_model(res, title, iter):
     torch.save(td4.pol.state_dict(), path)
 
 
-class TD4:
+class MOTD4:
     def __init__(self,
                  env,
                  sub_states,
                  layers,
+                 reward_fns,
                  save_location,
                  gamma = 0.99,
                  tau = 1e-3,
@@ -59,6 +60,7 @@ class TD4:
         self.eval_env.rand_init = False
         self.sub_states = sub_states
         self.layers = layers
+        self.reward_fns = reward_fns
         self.save_location = save_location
 
         # hyper parameters
@@ -75,13 +77,8 @@ class TD4:
 
         # networks
         self.pol = Actor(self.num_obs, self.num_act, [400, 300]).double()
-        self.sub_critics = []
-        for i, inds in enumerate(self.sub_states):
-            sub_critic = Critic(len(inds), self.num_act, layers[i]).double()
-            sub_critic.init_weights()
-            self.sub_critics.append(sub_critic)
-        self.q1 = Critic(self.sub_states, self.num_act, layers).double()
-        self.q2 = Critic(self.sub_states, self.num_act, layers).double()
+        self.q1 = CompCritic(len(self.sub_states), layers[-1]).double()
+        self.q2 = CompCritic(len(self.sub_states), layers[-1]).double()
         self.pol.init_weights()
         self.q1.init_weights()
         self.q2.init_weights()
@@ -97,14 +94,26 @@ class TD4:
         self.target_q2 = disable_gradient_calculation(self.target_q2)
 
         # optimizers, buffer
-        self.pol_opt = torch.optim.Adam(self.pol.parameters(),
-                                        lr=self.pol_lr)
-        self.q1_opt = torch.optim.Adam(self.q1.parameters(),
-                                      lr=self.q_lr,)
-        self.q2_opt = torch.optim.Adam(self.q2.parameters(),
-                                       lr=self.q_lr, )
+        self.pol_opt = torch.optim.Adam(self.pol.parameters(), lr=self.pol_lr)
+        self.q1_opt = torch.optim.Adam(self.q1.parameters(), lr=self.q_lr)
+        self.q2_opt = torch.optim.Adam(self.q2.parameters(), lr=self.q_lr)
         self.buffer = ReplayBuffer(self.buffer_size, 10000)
         self.mse_loss = torch.nn.MSELoss()
+
+        # sub q network set up
+        self.sub_critics = []
+        self.sub_opts = []
+        self.sub_targets = []
+        for i, inds in enumerate(self.sub_states):
+            sub_critic = Critic(len(inds), self.num_act, layers[i]).double()
+            sub_critic.init_weights()
+            self.sub_critics.append(sub_critic)
+
+            opt = torch.optim.Adam(self.sub_critics[i].parameters(), lr=self.q_lr)
+            self.sub_opts.append(opt)
+
+            target_net = copy.deepcopy(self.sub_critics[i]).double()
+            self.sub_targets.append(disable_gradient_calculation(target_net))
 
         self.cum_q1_loss = 0
         self.cum_q2_loss = 0
@@ -147,34 +156,56 @@ class TD4:
         obs = torch.tensor(self.batch[3], dtype=torch.double)
         done = torch.tensor(self.batch[4], dtype=torch.double).unsqueeze(1)
 
-        self.q1_opt.zero_grad()
-        self.q2_opt.zero_grad()
+
+
+
         noise = self.clip(torch.tensor(self.noise(self.target_noise, self.num_act)),
                             -self.clip_range,
                             self.clip_range)
         target_action = self.clip(self.target_pol(obs) + noise,
                                     self.env.action_space.low,
                                     self.env.action_space.high)
-        target_q1_val = self.target_q1(obs, target_action)
-        target_q2_val = self.target_q2(obs, target_action)
+        sub_qs = []
+        sub_pre_qs = []
+        for i, inds in enumerate(self.sub_states):
+            self.sub_critics[i].zero_grad()
+            target_q_val = self.sub_targets[i](obs[:, inds], self.target_pol(obs))
+            y = self.reward_fns[i](pre_obs[:, inds]) + (self.gamma * target_q_val)
+            sub_q = self.sub_critics[i](pre_obs[:, inds], target_action)
+            loss = self.mse_loss(sub_q, y)
+            loss.backward()
+            sub_qs.append(sub_q.data)
+            sub_pre_qs.append(target_q_val.data)
+
+        self.q1_opt.zero_grad()
+        self.q2_opt.zero_grad()
+        q = torch.cat(sub_qs, 1)
+        pre_q = torch.cat(sub_pre_qs, 1)
+        target_q1_val = self.target_q1(pre_q)
+        target_q2_val = self.target_q2(pre_q)
         y = rewards + (self.gamma * (1.0 - done) * torch.min(target_q1_val, target_q2_val))
-        # loss = torch.sum((y - self.q(pre_obs, actions)) ** 2) / self.batch_size
-        q1_loss = self.mse_loss(self.q1(pre_obs, actions), y)
-        q2_loss = self.mse_loss(self.q2(pre_obs, actions), y)
+        q1_loss = self.mse_loss(self.q1(q), y)
+        q2_loss = self.mse_loss(self.q2(q), y)
         q1_loss.backward(retain_graph=True)
         q2_loss.backward()
         self.q1_opt.step()
         self.q2_opt.step()
-        self.cum_q1_loss += q1_loss.item()
-        self.cum_q2_loss += q2_loss.item()
 
         self.pol_opt.zero_grad()
-        objective = -self.q1(pre_obs, self.pol(pre_obs)).mean()
+        sub_qs = []
+        for i, inds in enumerate(self.sub_states):
+            q = self.sub_critics[i](pre_obs[:, inds], self.pol(pre_obs))
+            sub_qs.append(q)
+        q = torch.cat(sub_qs, 1)
+        objective = -self.q1(q).mean()
         objective.backward()
         self.pol_opt.step()
+
+        self.cum_q1_loss += q1_loss.item()
+        self.cum_q2_loss += q2_loss.item()
         self.cum_obj += objective.item()
 
-
+    #TODO add the new target nets
     # update target networks with tau
     def update_target_networks(self):
         for target, actual in zip(self.target_q1.named_parameters(), self.q1.named_parameters()):
@@ -197,7 +228,6 @@ class TD4:
             # self.eval_env.render()
             # time.sleep(0.1)
             state = next_state
-            print(r)
 
         total = sum(rewards)
         return total
@@ -269,13 +299,19 @@ class TD4:
 if __name__ == "__main__":
     seed = 1995
     torch.manual_seed(seed)
-    env = gym.make("ReacherPyBulletEnv-v0", sparse_reward=False, rand_init=False)
-    sub_states = [[0, 1, 2, 3, 4, 5], [0, 1, 2, 3, 4, 5, 6, 7]]
+    env = gym.make("ReacherPyBulletEnv-v0", sparse_reward=True, rand_init=False)
+    # x, y
+    sub_states = [[0, 2, 4, 5, 6, 7], [1, 3, 4, 5, 6, 7]]
     layers = [[128, 128] for i in range(3)]
 
+    def get_subreward(states):
+        reward = states[:, 1] < 1e-2
+        return reward.double()
+
+    reward_fns = [get_subreward, get_subreward]
     time_pref = time.strftime("_%Y_%m_%d_%H_%M")
-    title = "td4_dense" + time_pref
-    td4 = TD4(env, sub_states, layers, buffer_size=1e6, save_location=title)
+    title = "motd4_dense" + time_pref
+    td4 = MOTD4(env, sub_states, layers, reward_fns, title, buffer_size=1e6)
 
     res = td4.train(200, 100)
 

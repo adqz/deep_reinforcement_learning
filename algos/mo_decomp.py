@@ -205,7 +205,6 @@ class MOTD4:
         self.cum_q2_loss += q2_loss.item()
         self.cum_obj += objective.item()
 
-    #TODO add the new target nets
     # update target networks with tau
     def update_target_networks(self):
         for target, actual in zip(self.target_q1.named_parameters(), self.q1.named_parameters()):
@@ -214,6 +213,9 @@ class MOTD4:
             target[1].data.copy_(self.tau * actual[1].data + (1 - self.tau) * target[1].data)
         for target, actual in zip(self.target_pol.named_parameters(), self.pol.named_parameters()):
             target[1].data.copy_(self.tau * actual[1].data + (1 - self.tau) * target[1].data)
+        for i, inds in enumerate(self.sub_states):
+            for target, actual in zip(self.sub_targets[i].named_parameters(), self.sub_critics[i].named_parameters()):
+                target[1].data.copy_(self.tau * actual[1].data + (1 - self.tau) * target[1].data)
 
     def policy_eval(self):
         state = self.eval_env.reset()
@@ -306,7 +308,8 @@ if __name__ == "__main__":
 
     def get_subreward(states):
         reward = states[:, 1] < 1e-2
-        return reward.double()
+        reward = reward.double().unsqueeze(1)
+        return reward
 
     reward_fns = [get_subreward, get_subreward]
     time_pref = time.strftime("_%Y_%m_%d_%H_%M")

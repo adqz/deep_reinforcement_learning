@@ -156,9 +156,6 @@ class MOTD4:
         obs = torch.tensor(self.batch[3], dtype=torch.double).to(device)
         done = torch.tensor(self.batch[4], dtype=torch.double).unsqueeze(1).to(device)
 
-
-
-
         noise = self.clip(torch.tensor(self.noise(self.target_noise, self.num_act)),
                             -self.clip_range,
                             self.clip_range)
@@ -169,23 +166,27 @@ class MOTD4:
         target_action = target_action.to(device)
         
         sub_qs = []
-        sub_pre_qs = []
+        sub_target_qs = []
         for i, inds in enumerate(self.sub_states):
             self.sub_critics[i].zero_grad()
-            target_q_val = self.sub_targets[i](obs[:, inds], self.target_pol(obs))
-            y = self.reward_fns[i](pre_obs[:, inds]) + (self.gamma * target_q_val)
-            sub_q = self.sub_critics[i](pre_obs[:, inds], target_action)
+            target_sub_q = self.sub_targets[i](obs[:, inds], target_action)
+
+            y = self.reward_fns[i](pre_obs[:, inds]) + (self.gamma * target_sub_q)
+
+            sub_q = self.sub_critics[i](pre_obs[:, inds], actions)
+
             loss = self.mse_loss(sub_q, y)
             loss.backward()
+
             sub_qs.append(sub_q.data)
-            sub_pre_qs.append(target_q_val.data)
+            sub_target_qs.append(target_sub_q.data)
 
         self.q1_opt.zero_grad()
         self.q2_opt.zero_grad()
         q = torch.cat(sub_qs, 1).to(device)
-        pre_q = torch.cat(sub_pre_qs, 1).to(device)
-        target_q1_val = self.target_q1(pre_q)
-        target_q2_val = self.target_q2(pre_q)
+        target_q = torch.cat(sub_target_qs, 1).to(device)
+        target_q1_val = self.target_q1(target_q)
+        target_q2_val = self.target_q2(target_q)
         y = rewards + (self.gamma * (1.0 - done) * torch.min(target_q1_val, target_q2_val))
         q1_loss = self.mse_loss(self.q1(q), y)
         q2_loss = self.mse_loss(self.q2(q), y)
@@ -195,11 +196,11 @@ class MOTD4:
         self.q2_opt.step()
 
         self.pol_opt.zero_grad()
-        sub_qs = []
+        qs = []
         for i, inds in enumerate(self.sub_states):
             q = self.sub_critics[i](pre_obs[:, inds], self.pol(pre_obs))
-            sub_qs.append(q)
-        q = torch.cat(sub_qs, 1)
+            qs.append(q)
+        q = torch.cat(qs, 1).to(device)
         objective = -self.q1(q).mean()
         objective.backward()
         self.pol_opt.step()
@@ -322,6 +323,6 @@ if __name__ == "__main__":
     title = "motd4_dense" + time_pref
     td4 = MOTD4(env, sub_states, layers, reward_fns, title, buffer_size=1e4)
 
-    res = td4.train(200000, 10000)
+    res = td4.train(200, 100)
 
 

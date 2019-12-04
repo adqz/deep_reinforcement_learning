@@ -126,7 +126,7 @@ class CompCritic(torch.nn.Module):
 
         self.fc1 = nn.Linear(state_size, layers[0])
         # self.bn1 = nn.BatchNorm1d(num_features=layers[0])
-        self.fc2 = nn.Linear(layers[0] , layers[1])
+        self.fc2 = nn.Linear(layers[0], layers[1])
         self.fc3 = nn.Linear(layers[1], 1)
         self.relu = nn.ReLU()
 

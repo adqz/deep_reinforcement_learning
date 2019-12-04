@@ -457,14 +457,14 @@ def save_model(res, title, iter):
 if __name__ == "__main__":
     seed = 1995
     torch.manual_seed(seed)
-    env = gym.make("ReacherPyBulletEnv-v0", sparse_reward=False, rand_init=False)
-    sub_states = [[0, 1, 2, 3, 4, 5], [0, 1, 2, 3, 4, 5, 6, 7]]
+    env = gym.make("ReacherPyBulletEnv-v0", sparse_reward=True, rand_init=False)
+    sub_states = [[0, 1, 2, 3, 4, 5], [0, 1, 2, 3, 6, 7]]
     layers = [[128, 128] for i in range(3)]
 
     time_pref = time.strftime("_%Y_%m_%d_%H_%M")
     title = "td4_dense" + time_pref
     td4 = TD4(env, sub_states, layers, buffer_size=1e4, save_location=title)
 
-    res = td4.train(200000, 2000)
+    res = td4.train(2000, 1000)
 
 

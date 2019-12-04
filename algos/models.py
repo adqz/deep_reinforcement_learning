@@ -2,6 +2,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
+from itertools import chain
 
 class Actor(torch.nn.Module):
 
@@ -102,6 +103,19 @@ class DecompCritic(torch.nn.Module):
         nn.init.uniform_(self.fc1.bias.data, -1 / (np.sqrt(len(self.sub_states))), 1 / (np.sqrt(len(self.sub_states))))
         nn.init.uniform_(self.fc2.bias.data, -1 / (np.sqrt(self.layers[-1][0])), 1 / (np.sqrt(self.layers[-1][0])))
         nn.init.uniform_(self.fc3.bias.data, -3e-3, 3e-3)
+
+    # def parameters(self, recurse: bool = ...) -> Iterator[Parameter]:
+    def parameters(self, recurse = True):
+        gen = chain(super().parameters())
+        for i, ind in enumerate(self.sub_states):
+            gen = chain(gen, self.sub_critics[i].parameters())
+        return gen
+
+    def named_parameters(self,  prefix='', recurse=True):
+        gen = chain(super().named_parameters())
+        for i, ind in enumerate(self.sub_states):
+            gen = chain(gen, self.sub_critics[i].named_parameters())
+        return gen
 
 class CompCritic(torch.nn.Module):
 

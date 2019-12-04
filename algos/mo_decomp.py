@@ -303,7 +303,8 @@ class MOTD4:
 
 if __name__ == "__main__":
     global device
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    #device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device = torch.device('cpu')
     seed = 1995
     torch.manual_seed(seed)
     env = gym.make("ReacherPyBulletEnv-v0", sparse_reward=True, rand_init=False)
@@ -312,15 +313,15 @@ if __name__ == "__main__":
     layers = [[128, 128] for i in range(3)]
 
     def get_subreward(states):
-        reward = states[:, 1] < 1e-2
+        reward = -torch.abs(states[:, 1])# < 1e-2
         reward = reward.double().unsqueeze(1)
         return reward
 
     reward_fns = [get_subreward, get_subreward]
     time_pref = time.strftime("_%Y_%m_%d_%H_%M")
     title = "motd4_dense" + time_pref
-    td4 = MOTD4(env, sub_states, layers, reward_fns, title, buffer_size=1e6)
+    td4 = MOTD4(env, sub_states, layers, reward_fns, title, buffer_size=1e4)
 
-    res = td4.train(20000, 1000)
+    res = td4.train(200000, 10000)
 
 

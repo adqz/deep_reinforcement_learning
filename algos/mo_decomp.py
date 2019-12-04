@@ -162,7 +162,7 @@ class MOTD4:
         noise = self.clip(torch.tensor(self.noise(self.target_noise, self.num_act)),
                             -self.clip_range,
                             self.clip_range)
-        target_action = self.clip(self.target_pol(obs) + noise,
+        target_action = self.clip(self.target_pol(obs).cpu() + noise,
                                     self.env.action_space.low,
                                     self.env.action_space.high)
         sub_qs = []
@@ -224,7 +224,7 @@ class MOTD4:
         while not done:
             inp = torch.tensor(state, dtype=torch.double)
             action = self.pol(inp)
-            action = action.detach().numpy()
+            action = action.cpu().detach().numpy()
             next_state, r, done, _ = self.eval_env.step(action)
             rewards.append(r)
             # self.eval_env.render()
@@ -265,7 +265,7 @@ class MOTD4:
                 inp = torch.tensor(obs, dtype=torch.double).to(device)
                 action = self.pol(inp)
                 action = action + self.noise(self.action_noise, self.num_act).to(device)
-                action = action.detach().numpy()
+                action = action.cpu().detach().numpy()
                 obs, reward, done, _ = self.env.step(action)
                 self.buffer.insert((pre_obs, action, reward, obs, done))
                 if render:

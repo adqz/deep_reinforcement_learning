@@ -76,9 +76,9 @@ class MOTD4:
         self.update_delay = update_delay
 
         # networks
-        self.pol = Actor(self.num_obs, self.num_act, [400, 300]).double()
-        self.q1 = CompCritic(len(self.sub_states), layers[-1]).double()
-        self.q2 = CompCritic(len(self.sub_states), layers[-1]).double()
+        self.pol = Actor(self.num_obs, self.num_act, [400, 300]).double().to(device)
+        self.q1 = CompCritic(len(self.sub_states), layers[-1]).double().to(device)
+        self.q2 = CompCritic(len(self.sub_states), layers[-1]).double().to(device)
         self.pol.init_weights()
         self.q1.init_weights()
         self.q2.init_weights()
@@ -98,21 +98,21 @@ class MOTD4:
         self.q1_opt = torch.optim.Adam(self.q1.parameters(), lr=self.q_lr)
         self.q2_opt = torch.optim.Adam(self.q2.parameters(), lr=self.q_lr)
         self.buffer = ReplayBuffer(self.buffer_size, 10000)
-        self.mse_loss = torch.nn.MSELoss()
+        self.mse_loss = torch.nn.MSELoss().to(device)
 
         # sub q network set up
         self.sub_critics = []
         self.sub_opts = []
         self.sub_targets = []
         for i, inds in enumerate(self.sub_states):
-            sub_critic = Critic(len(inds), self.num_act, layers[i]).double()
+            sub_critic = Critic(len(inds), self.num_act, layers[i]).double().to(device)
             sub_critic.init_weights()
             self.sub_critics.append(sub_critic)
 
             opt = torch.optim.Adam(self.sub_critics[i].parameters(), lr=self.q_lr)
             self.sub_opts.append(opt)
 
-            target_net = copy.deepcopy(self.sub_critics[i]).double()
+            target_net = copy.deepcopy(self.sub_critics[i]).double() #TODO: does this also get pushed to GPU?
             self.sub_targets.append(disable_gradient_calculation(target_net))
 
         self.cum_q1_loss = 0
@@ -262,7 +262,7 @@ class MOTD4:
             for j in trange(eval_len):
                 # one step and put into buffer
                 pre_obs = obs
-                inp = torch.tensor(obs, dtype=torch.double)
+                inp = torch.tensor(obs, dtype=torch.double).to(device)
                 action = self.pol(inp)
                 action = action + self.noise(self.action_noise, self.num_act)
                 action = action.detach().numpy()
@@ -299,6 +299,8 @@ class MOTD4:
 
 
 if __name__ == "__main__":
+    global device
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     seed = 1995
     torch.manual_seed(seed)
     env = gym.make("ReacherPyBulletEnv-v0", sparse_reward=True, rand_init=False)

@@ -321,6 +321,6 @@ if __name__ == "__main__":
     title = "motd4_dense" + time_pref
     td4 = MOTD4(env, sub_states, layers, reward_fns, title, buffer_size=1e6)
 
-    res = td4.train(200, 100)
+    res = td4.train(20000, 1000)
 
 

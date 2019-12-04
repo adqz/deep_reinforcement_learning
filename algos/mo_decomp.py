@@ -145,7 +145,7 @@ class MOTD4:
         else:
             assert(False, "Clipped wrong")
 
-        return torch.max(torch.min(x, upper.to(device)), lower.to(device))
+        return torch.max(torch.min(x.to(device), upper), lower)
 
     # update neural net
     def update_networks(self):

@@ -129,3 +129,31 @@ class CompCritic(torch.nn.Module):
         nn.init.uniform_(self.fc1.bias.data, -1 / (np.sqrt(self.state_size)), 1 / (np.sqrt(self.state_size)))
         nn.init.uniform_(self.fc2.bias.data, -1 / (np.sqrt(self.layers[0])), 1 / (np.sqrt(self.layers[0])))
         nn.init.uniform_(self.fc3.bias.data, -3e-3, 3e-3)
+
+
+class SumCritic(torch.nn.Module):
+
+    def __init__(self, sub_states, action_size, layers):
+        super(SumCritic, self).__init__()
+        self.sub_critics = []
+        for i, inds in enumerate(sub_states):
+            sub_critic = Critic(len(inds), 1, layers[i]).double()
+            sub_critic.init_weights()
+            self.sub_critics.append(sub_critic)
+
+        self.sub_states = sub_states
+        self.action_size = action_size
+        self.layers = layers
+
+    def forward(self, state, action):
+        sub_q_values = []
+        for i, ind in enumerate(self.sub_states):
+            sub_states = state[:, ind]
+            sub_q_values.append(self.sub_critics[i].forward(sub_states, action[:, i].unsqueeze(1)))
+
+        x = torch.sum(sub_q_values).unsqueeze(0)
+
+        return x
+
+    def init_weights(self):
+        pass

@@ -163,9 +163,12 @@ class MOTD4:
                             -self.clip_range,
                             self.clip_range)
         noise = noise.to(device)
-        target_action = self.clip(self.target_pol(obs) + noise,
-                                    self.env.action_space.low,
-                                    self.env.action_space.high)
+        action_low = self.env.action_space.low.to(device)
+        action_high = self.env.action_space.high.to(device)
+        target_action = self.clip(self.target_pol(obs) + noise, action_low, action_high)
+        # target_action = self.clip(self.target_pol(obs) + noise,
+        #                             self.env.action_space.low,
+        #                             self.env.action_space.high)
         target_action = target_action.to(device)
         
         sub_qs = []

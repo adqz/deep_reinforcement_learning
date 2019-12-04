@@ -225,7 +225,7 @@ class MOTD4:
         done = False
         rewards = []
         while not done:
-            inp = torch.tensor(state, dtype=torch.double)
+            inp = torch.tensor(state, dtype=torch.double).to(device)
             action = self.pol(inp)
             action = action.cpu().detach().numpy()
             next_state, r, done, _ = self.eval_env.step(action)

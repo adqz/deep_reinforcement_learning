@@ -89,7 +89,7 @@ class TD4:
                                       lr=self.q_lr,)
         self.q2_opt = torch.optim.Adam(self.q2.parameters(),
                                        lr=self.q_lr, )
-        self.buffer = ReplayBuffer(self.buffer_size, 10000)
+        self.buffer = ReplayBuffer(self.buffer_size, 1000)
         self.mse_loss = torch.nn.MSELoss()
 
         self.cum_q1_loss = 0

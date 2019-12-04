@@ -150,11 +150,11 @@ class MOTD4:
     # update neural net
     def update_networks(self):
         # (pre_obs, action, reward, obs, done)
-        pre_obs = torch.tensor(self.batch[0], dtype=torch.double)
-        actions = torch.tensor(self.batch[1], dtype=torch.double)
-        rewards = torch.tensor(self.batch[2], dtype=torch.double)
-        obs = torch.tensor(self.batch[3], dtype=torch.double)
-        done = torch.tensor(self.batch[4], dtype=torch.double).unsqueeze(1)
+        pre_obs = torch.tensor(self.batch[0], dtype=torch.double).to(device)
+        actions = torch.tensor(self.batch[1], dtype=torch.double).to(device)
+        rewards = torch.tensor(self.batch[2], dtype=torch.double).to(device)
+        obs = torch.tensor(self.batch[3], dtype=torch.double).to(device)
+        done = torch.tensor(self.batch[4], dtype=torch.double).unsqueeze(1).to(device)
 
 
 
@@ -162,9 +162,12 @@ class MOTD4:
         noise = self.clip(torch.tensor(self.noise(self.target_noise, self.num_act)),
                             -self.clip_range,
                             self.clip_range)
-        target_action = self.clip(self.target_pol(obs).cpu() + noise,
+        noise = noise.to(device)
+        target_action = self.clip(self.target_pol(obs) + noise,
                                     self.env.action_space.low,
                                     self.env.action_space.high)
+        target_action = target_action.to(device)
+        
         sub_qs = []
         sub_pre_qs = []
         for i, inds in enumerate(self.sub_states):
@@ -179,8 +182,8 @@ class MOTD4:
 
         self.q1_opt.zero_grad()
         self.q2_opt.zero_grad()
-        q = torch.cat(sub_qs, 1)
-        pre_q = torch.cat(sub_pre_qs, 1)
+        q = torch.cat(sub_qs, 1).to(device)
+        pre_q = torch.cat(sub_pre_qs, 1).to(device)
         target_q1_val = self.target_q1(pre_q)
         target_q2_val = self.target_q2(pre_q)
         y = rewards + (self.gamma * (1.0 - done) * torch.min(target_q1_val, target_q2_val))

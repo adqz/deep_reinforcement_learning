@@ -264,7 +264,7 @@ class MOTD4:
                 pre_obs = obs
                 inp = torch.tensor(obs, dtype=torch.double).to(device)
                 action = self.pol(inp)
-                action = action + self.noise(self.action_noise, self.num_act)
+                action = action + self.noise(self.action_noise, self.num_act).to(device)
                 action = action.detach().numpy()
                 obs, reward, done, _ = self.env.step(action)
                 self.buffer.insert((pre_obs, action, reward, obs, done))

@@ -137,11 +137,11 @@ class MOTD4:
     # for clipping off values
     def clip(self, x, l, u):
         if isinstance(l, (list, np.ndarray)):
-            lower = torch.tensor(l, dtype=torch.double)
-            upper = torch.tensor(u, dtype=torch.double)
+            lower = torch.tensor(l, dtype=torch.double).to(device)
+            upper = torch.tensor(u, dtype=torch.double).to(device)
         elif isinstance(l, (int, float)):
-            lower = torch.tensor([l for i in range(len(x))], dtype=torch.double)
-            upper = torch.tensor([u for i in range(len(x))], dtype=torch.double)
+            lower = torch.tensor([l for i in range(len(x))], dtype=torch.double).to(device)
+            upper = torch.tensor([u for i in range(len(x))], dtype=torch.double).to(device)
         else:
             assert(False, "Clipped wrong")
 

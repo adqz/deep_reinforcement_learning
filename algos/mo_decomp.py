@@ -145,7 +145,7 @@ class MOTD4:
         else:
             assert(False, "Clipped wrong")
 
-        return torch.max(torch.min(x, upper), lower)
+        return torch.max(torch.min(x, upper.to(device)), lower.to(device))
 
     # update neural net
     def update_networks(self):
@@ -163,12 +163,9 @@ class MOTD4:
                             -self.clip_range,
                             self.clip_range)
         noise = noise.to(device)
-        action_low = self.env.action_space.low.to(device)
-        action_high = self.env.action_space.high.to(device)
-        target_action = self.clip(self.target_pol(obs) + noise, action_low, action_high)
-        # target_action = self.clip(self.target_pol(obs) + noise,
-        #                             self.env.action_space.low,
-        #                             self.env.action_space.high)
+        target_action = self.clip(self.target_pol(obs) + noise,
+                                    self.env.action_space.low,
+                                    self.env.action_space.high)
         target_action = target_action.to(device)
         
         sub_qs = []

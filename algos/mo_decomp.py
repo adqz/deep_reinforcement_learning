@@ -317,6 +317,7 @@ if __name__ == "__main__":
         # reward = -torch.abs(states[:, 1])# < 1e-2
         reward = torch.abs(states[:, 1]) < 1e-2
         reward = reward.double().unsqueeze(1)
+        reward = (reward * 2) - 1
         return reward
 
     reward_fns = [get_subreward, get_subreward]

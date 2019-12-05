@@ -314,7 +314,8 @@ if __name__ == "__main__":
     layers = [[128, 128] for i in range(3)]
 
     def get_subreward(states):
-        reward = -torch.abs(states[:, 1])# < 1e-2
+        # reward = -torch.abs(states[:, 1])# < 1e-2
+        reward = torch.abs(states[:, 1]) < 1e-2
         reward = reward.double().unsqueeze(1)
         return reward
 

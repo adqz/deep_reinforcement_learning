@@ -170,16 +170,13 @@ class MOTD4:
         for i, inds in enumerate(self.sub_states):
             self.sub_opts[i].zero_grad()
             target_sub_q = self.sub_targets[i](obs[:, inds], target_action)
-
-            y = self.reward_fns[i](pre_obs[:, inds]) + (self.gamma * target_sub_q)
-
+            y = self.reward_fns[i](pre_obs[:, inds]) + (self.gamma * (1.0 - done) * target_sub_q)
             sub_q = self.sub_critics[i](pre_obs[:, inds], actions)
-
             loss = self.mse_loss(sub_q, y)
             loss.backward()
-
             sub_qs.append(sub_q.data)
             sub_target_qs.append(target_sub_q.data)
+            self.sub_opts[i].step()
 
         self.q1_opt.zero_grad()
         self.q2_opt.zero_grad()

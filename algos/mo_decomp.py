@@ -112,7 +112,7 @@ class MOTD4:
             opt = torch.optim.Adam(self.sub_critics[i].parameters(), lr=self.q_lr)
             self.sub_opts.append(opt)
 
-            target_net = copy.deepcopy(self.sub_critics[i]).double() #TODO: does this also get pushed to GPU?
+            target_net = copy.deepcopy(self.sub_critics[i]).double()
             self.sub_targets.append(disable_gradient_calculation(target_net))
 
         self.cum_q1_loss = 0
@@ -168,7 +168,7 @@ class MOTD4:
         sub_qs = []
         sub_target_qs = []
         for i, inds in enumerate(self.sub_states):
-            self.sub_critics[i].zero_grad()
+            self.sub_opts[i].zero_grad()
             target_sub_q = self.sub_targets[i](obs[:, inds], target_action)
 
             y = self.reward_fns[i](pre_obs[:, inds]) + (self.gamma * target_sub_q)
@@ -313,14 +313,18 @@ if __name__ == "__main__":
     sub_states = [[0, 2, 4, 5, 6, 7], [1, 3, 4, 5, 6, 7]]
     layers = [[128, 128] for i in range(3)]
 
-    def get_subreward(states):
+    def get_subreward_sparse(states):
         # reward = -torch.abs(states[:, 1])# < 1e-2
         reward = torch.abs(states[:, 1]) < 1e-2
         reward = reward.double().unsqueeze(1)
         reward = (reward * 2) - 1
         return reward
+    def get_subreward_dense(states):
+        reward = -torch.abs(states[:, 1])
+        reward = reward.double().unsqueeze(1)
+        return reward
 
-    reward_fns = [get_subreward, get_subreward]
+    reward_fns = [get_subreward_dense, get_subreward_dense]
     time_pref = time.strftime("_%Y_%m_%d_%H_%M")
     title = "motd4_dense" + time_pref
     td4 = MOTD4(env, sub_states, layers, reward_fns, title, buffer_size=1e4)

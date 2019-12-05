@@ -104,7 +104,6 @@ class DecompCritic(torch.nn.Module):
         nn.init.uniform_(self.fc2.bias.data, -1 / (np.sqrt(self.layers[-1][0])), 1 / (np.sqrt(self.layers[-1][0])))
         nn.init.uniform_(self.fc3.bias.data, -3e-3, 3e-3)
 
-    # def parameters(self, recurse: bool = ...) -> Iterator[Parameter]:
     def parameters(self, recurse = True):
         gen = chain(super().parameters())
         for i, ind in enumerate(self.sub_states):
@@ -165,9 +164,21 @@ class SumCritic(torch.nn.Module):
             sub_states = state[:, ind]
             sub_q_values.append(self.sub_critics[i].forward(sub_states, action[:, i].unsqueeze(1)))
 
-        x = torch.sum(sub_q_values).unsqueeze(0)
+        x = sum(sub_q_values).unsqueeze(0)
 
         return x
 
     def init_weights(self):
         pass
+
+    def parameters(self, recurse = True):
+        gen = chain(super().parameters())
+        for i, ind in enumerate(self.sub_states):
+            gen = chain(gen, self.sub_critics[i].parameters())
+        return gen
+
+    def named_parameters(self,  prefix='', recurse=True):
+        gen = chain(super().named_parameters())
+        for i, ind in enumerate(self.sub_states):
+            gen = chain(gen, self.sub_critics[i].named_parameters())
+        return gen

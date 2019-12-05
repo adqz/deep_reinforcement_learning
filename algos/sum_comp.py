@@ -1,0 +1,302 @@
+import numpy as np
+import torch
+import torch.nn as nn
+import gym
+import pybulletgym
+
+import copy, time
+from tqdm import trange
+
+from models import Actor, SumCritic
+from buffers import ReplayBuffer
+
+import pickle
+import time
+import os
+
+
+def disable_gradient_calculation(model):
+    ''' Sets requried_grad to False so gradients are not computed for the model '''
+    print('Caution: Disbaling gradient')
+    for p in model.parameters():
+        p.requires_grad = False
+
+    return model
+
+
+def save_model(res, title, iter, length):
+    if not os.path.exists("./data/info/"):
+        os.makedirs("./data/info/")
+    if not os.path.exists("./data/policy/"):
+        os.makedirs("./data/policy/")
+    pickle.dump(res, open('./data/info/info_{}_{}'.format(title, iter), 'wb'))
+
+    for i in range(length):
+        path = './data/policy/pol_part{}_{}_{}'.format(i, title, iter)
+        torch.save(td4.actor_opts[i].state_dict(), path)
+
+class sumTD4:
+
+    def __init__(self,
+                 env,
+                 sub_states,
+                 actor_layers,
+                 critic_layers,
+                 save_location,
+                 gamma=0.99,
+                 tau=1e-3,
+                 pol_lr=1e-4,
+                 q_lr=5e-3,
+                 batch_size=64,
+                 buffer_size=10000,
+                 target_noise=0.2,
+                 action_noise=0.1,
+                 clip_range=0.5,
+                 update_delay=2,
+                 ):
+
+        # environment stuff
+        self.env = env
+        self.num_act = env.action_space.shape[0]
+        self.num_obs = env.observation_space.shape[0]
+        self.eval_env = copy.deepcopy(env)
+        self.eval_env.rand_init = False
+        self.sub_states = sub_states
+        self.actor_layers = actor_layers
+        self.critic_layers = critic_layers
+        self.save_location = save_location
+
+        # hyper parameters
+        self.gamma = gamma
+        self.tau = tau
+        self.pol_lr = pol_lr
+        self.q_lr = q_lr
+        self.batch_size = batch_size
+        self.buffer_size = buffer_size
+        self.target_noise = target_noise
+        self.action_noise = action_noise
+        self.clip_range = clip_range
+        self.update_delay = update_delay
+
+        # networks
+        self.actors = []
+        self.target_actors = []
+        self.actor_opts = []
+        for i, inds in enumerate(self.sub_states):
+            a = Actor(self.num_obs, 1, self.actor_layers[i]).double()
+            a.init_weights()
+            self.actors.append(a)
+            self.target_actors.append(disable_gradient_calculation(copy.deepcopy(a)))
+            self.actor_opts.append(torch.optim.Adam(a.parameters(), lr=self.pol_lr))
+
+        self.q1 = SumCritic(self.sub_states, self.num_act, self.critic_layers).double()
+        self.q2 = SumCritic(self.sub_states, self.num_act, self.critic_layers).double()
+        self.q1.init_weights()
+        self.q2.init_weights()
+
+        # target networks
+        self.target_q1 = copy.deepcopy(self.q1).double()
+        self.target_q2 = copy.deepcopy(self.q2).double()
+
+        # Remove parameters of target network from computation graph
+        self.target_q1 = disable_gradient_calculation(self.target_q1)
+        self.target_q2 = disable_gradient_calculation(self.target_q2)
+
+        # optimizers, buffer
+        self.q1_opt = torch.optim.Adam(self.q1.parameters(),
+                                       lr=self.q_lr, )
+        self.q2_opt = torch.optim.Adam(self.q2.parameters(),
+                                       lr=self.q_lr, )
+        self.buffer = ReplayBuffer(self.buffer_size, 10000)
+        self.mse_loss = torch.nn.MSELoss()
+
+        self.cum_q1_loss = 0
+        self.cum_q2_loss = 0
+        self.cum_obj = 0
+
+    def noise(self, noise, length):
+        return torch.tensor(np.random.multivariate_normal(
+            mean=np.array([0.0 for i in range(length)]),
+            cov=np.diag([noise for i in range(length)])), dtype=torch.double)
+
+    # fill up buffer first
+    def prep_buffer(self):
+        obs = self.env.reset()
+        while not self.buffer.ready:
+            pre_obs = obs
+            action = self.env.action_space.sample()
+            obs, reward, done, _ = self.env.step(action)
+            self.buffer.insert((pre_obs, action, reward, obs, done))
+            if done: obs = self.env.reset()
+
+    # for clipping off values
+    def clip(self, x, l, u):
+        if isinstance(l, (list, np.ndarray)):
+            lower = torch.tensor(l, dtype=torch.double)
+            upper = torch.tensor(u, dtype=torch.double)
+        elif isinstance(l, (int, float)):
+            lower = torch.tensor([l for i in range(len(x))], dtype=torch.double)
+            upper = torch.tensor([u for i in range(len(x))], dtype=torch.double)
+        else:
+            assert (False, "Clipped wrong")
+
+        return torch.max(torch.min(x, upper), lower)
+
+    # update neural net
+    def update_networks(self):
+        # (pre_obs, action, reward, obs, done)
+        pre_obs = torch.tensor(self.batch[0], dtype=torch.double)
+        actions = torch.tensor(self.batch[1], dtype=torch.double)
+        rewards = torch.tensor(self.batch[2], dtype=torch.double)
+        obs = torch.tensor(self.batch[3], dtype=torch.double)
+        done = torch.tensor(self.batch[4], dtype=torch.double).unsqueeze(1)
+
+        self.q1_opt.zero_grad()
+        self.q2_opt.zero_grad()
+        noise = self.clip(torch.tensor(self.noise(self.target_noise, self.num_act)),
+                          -self.clip_range,
+                          self.clip_range)
+        a = []
+        for i, inds in enumerate(self.sub_states):
+            a.append(self.target_actors[i](obs))
+        a = torch.cat(a, 1)
+        target_action = self.clip(a + noise,
+                                  self.env.action_space.low,
+                                  self.env.action_space.high)
+        target_q1_val = self.target_q1(obs, target_action)
+        target_q2_val = self.target_q2(obs, target_action)
+        y = rewards + (self.gamma * (1.0 - done) * torch.min(target_q1_val, target_q2_val))
+
+        q1_loss = self.mse_loss(self.q1(pre_obs, actions), y)
+        q2_loss = self.mse_loss(self.q2(pre_obs, actions), y)
+        q1_loss.backward(retain_graph=True)
+        q2_loss.backward()
+        self.q1_opt.step()
+        self.q2_opt.step()
+        self.cum_q1_loss += q1_loss.item()
+        self.cum_q2_loss += q2_loss.item()
+
+
+        a = []
+        for i, inds in enumerate(self.sub_states):
+            self.actor_opts[i].zero_grad()
+            a.append(self.actors[i](pre_obs))
+        a = torch.cat(a, 1)
+        objective = -self.q1(pre_obs, a).mean()
+        objective.backward()
+        for i, inds in enumerate(self.sub_states):
+            self.actor_opts[i].step()
+        self.cum_obj += objective.item()
+
+    # update target networks with tau
+    def update_target_networks(self):
+        for target, actual in zip(self.target_q1.named_parameters(), self.q1.named_parameters()):
+            target[1].data.copy_(self.tau * actual[1].data + (1 - self.tau) * target[1].data)
+        for target, actual in zip(self.target_q2.named_parameters(), self.q2.named_parameters()):
+            target[1].data.copy_(self.tau * actual[1].data + (1 - self.tau) * target[1].data)
+        for i, inds in enumerate(self.sub_states):
+            for target, actual in zip(self.target_actors[i].named_parameters(), self.actors[i].named_parameters()):
+                target[1].data.copy_(self.tau * actual[1].data + (1 - self.tau) * target[1].data)
+
+    def policy_eval(self):
+        state = self.eval_env.reset()
+        done = False
+        rewards = []
+        while not done:
+            inp = torch.tensor(state, dtype=torch.double)
+            a = []
+            for i, inds in enumerate(self.sub_states):
+                a.append(self.target_actors[i](inp))
+            action = torch.cat(a, 0)
+            action = action.detach().numpy()
+            next_state, r, done, _ = self.eval_env.step(action)
+            rewards.append(r)
+            # self.eval_env.render()
+            # time.sleep(0.1)
+            state = next_state
+            # print(r)
+
+        total = sum(rewards)
+        return total
+
+    def count_parameters(self):
+        ''' Count number of parameters in network and print them '''
+        params_pol = sum(p.numel() for p in self.pol.parameters() if p.requires_grad)
+        params_q1 = sum(p.numel() for p in self.q1.parameters() if p.requires_grad)
+        params_q2 = sum(p.numel() for p in self.q2.parameters() if p.requires_grad)
+        params_target_pol = sum(p.numel() for p in self.target_pol.parameters() if p.requires_grad)
+        params_target_q1 = sum(p.numel() for p in self.target_q1.parameters() if p.requires_grad)
+        params_target_q2 = sum(p.numel() for p in self.target_q2.parameters() if p.requires_grad)
+
+        params_1 = (params_pol + params_q1 + params_q2)
+        params_2 = (params_target_pol + params_target_q1 + params_target_q2)
+        total_trainable_params = params_1 + params_2
+
+        print(f'Parameter count: {params_1} + {params_2} = {total_trainable_params}')
+        return
+
+    def train(self, num_iters=200000, eval_len=1000, render=False):
+        print("Start")
+        if render: self.env.render('human')
+        self.prep_buffer()
+        obs = self.env.reset()
+        iter_info = []
+
+        # train for num_iters
+        for i in range(int(num_iters / eval_len)):
+            for j in trange(eval_len):
+                # one step and put into buffer
+                pre_obs = obs
+                inp = torch.tensor(obs, dtype=torch.double)
+                a = []
+                for i, inds in enumerate(self.sub_states):
+                    a.append(self.target_actors[i](inp))
+                action = torch.cat(a, 0)
+                action = action + self.noise(self.action_noise, self.num_act)
+                action = action.detach().numpy()
+                obs, reward, done, _ = self.env.step(action)
+                self.buffer.insert((pre_obs, action, reward, obs, done))
+                if render:
+                    self.env.render('human')
+                    time.sleep(0.000001)
+                if done: obs = self.env.reset()
+
+                # TD3 updates less often
+                if j % self.update_delay == 0:
+                    # sample from buffer, train one step, update target networks
+                    self.batch = self.buffer.sample(self.batch_size)
+                    self.update_networks()
+                    self.update_target_networks()
+
+            iter_reward = self.policy_eval()
+            avg_q1_loss = self.cum_q1_loss / ((i + 1) * eval_len)
+            avg_q2_loss = self.cum_q2_loss / ((i + 1) * eval_len)
+            avg_obj = self.cum_obj / ((i + 1) * eval_len)
+            print("Iteration {}/{}".format((i + 1) * eval_len, num_iters))
+            print("Rewards: {} | Q Loss: {}, {} | Policy Objective: {}".format(iter_reward,
+                                                                               avg_q1_loss,
+                                                                               avg_q2_loss,
+                                                                               avg_obj))
+            save_model(iter_info, self.save_location, i, len(self.sub_states))
+            # testing parameters memory
+            # self.count_parameters()
+            iter_info.append((iter_reward, avg_q1_loss, avg_q2_loss, avg_obj))
+
+        return iter_info
+
+
+if __name__ == "__main__":
+    seed = 1995
+    torch.manual_seed(seed)
+    env = gym.make("ReacherPyBulletEnv-v0", sparse_reward=True, rand_init=False)
+    sub_states = [[0, 1, 2, 3, 4, 5, 6, 7] for i in range(2)]
+    actor_layers = [[400, 300] for i in range(2)]
+    critic_layers = layers = [[128, 128] for i in range(2)]
+
+    time_pref = time.strftime("_%Y_%m_%d_%H_%M")
+    title = "sumtd4_sparse" + time_pref
+    td4 = sumTD4(env, sub_states, actor_layers, critic_layers, buffer_size=1e4, save_location=title)
+
+    res = td4.train(200000, 10000)
+
+

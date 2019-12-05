@@ -249,8 +249,8 @@ class sumTD4:
                 pre_obs = obs
                 inp = torch.tensor(obs, dtype=torch.double)
                 a = []
-                for i, inds in enumerate(self.sub_states):
-                    a.append(self.target_actors[i](inp))
+                for x, inds in enumerate(self.sub_states):
+                    a.append(self.target_actors[x](inp))
                 action = torch.cat(a, 0)
                 action = action + self.noise(self.action_noise, self.num_act)
                 action = action.detach().numpy()
@@ -272,6 +272,7 @@ class sumTD4:
             avg_q1_loss = self.cum_q1_loss / ((i + 1) * eval_len)
             avg_q2_loss = self.cum_q2_loss / ((i + 1) * eval_len)
             avg_obj = self.cum_obj / ((i + 1) * eval_len)
+           
             print("Iteration {}/{}".format((i + 1) * eval_len, num_iters))
             print("Rewards: {} | Q Loss: {}, {} | Policy Objective: {}".format(iter_reward,
                                                                                avg_q1_loss,
@@ -288,13 +289,13 @@ class sumTD4:
 if __name__ == "__main__":
     seed = 1995
     torch.manual_seed(seed)
-    env = gym.make("ReacherPyBulletEnv-v0", sparse_reward=True, rand_init=False)
+    env = gym.make("ReacherPyBulletEnv-v0", sparse_reward=False, rand_init=False)
     sub_states = [[0, 1, 2, 3, 4, 5, 6, 7] for i in range(2)]
     actor_layers = [[400, 300] for i in range(2)]
     critic_layers = layers = [[128, 128] for i in range(2)]
 
     time_pref = time.strftime("_%Y_%m_%d_%H_%M")
-    title = "sumtd4_sparse" + time_pref
+    title = "sumtd4_dense" + time_pref
     td4 = sumTD4(env, sub_states, actor_layers, critic_layers, buffer_size=1e4, save_location=title)
 
     res = td4.train(200000, 10000)

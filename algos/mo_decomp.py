@@ -308,7 +308,7 @@ if __name__ == "__main__":
     device = torch.device('cpu')
     seed = 1995
     torch.manual_seed(seed)
-    env = gym.make("ReacherPyBulletEnv-v0", sparse_reward=True, rand_init=False)
+    env = gym.make("ReacherPyBulletEnv-v0", sparse_reward=False, rand_init=False)
     # x, y
     sub_states = [[0, 2, 4, 5, 6, 7], [1, 3, 4, 5, 6, 7]]
     layers = [[128, 128] for i in range(3)]
@@ -326,9 +326,9 @@ if __name__ == "__main__":
 
     reward_fns = [get_subreward_dense, get_subreward_dense]
     time_pref = time.strftime("_%Y_%m_%d_%H_%M")
-    title = "motd4_dense" + time_pref
+    title = "motd4_denseT_denseS" + time_pref
     td4 = MOTD4(env, sub_states, layers, reward_fns, title, buffer_size=1e4)
 
-    res = td4.train(200, 100)
+    res = td4.train(200000, 10000)
 
 
